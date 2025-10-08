@@ -27,13 +27,11 @@ Key goals:
 5. Charts visualize stock trends over time.  
 6. Auto-refresh ensures the dashboard always shows live data.
 
----
 
  🖥 Screenshots
-![Homepage](assets/demo1.png)  
-![Chart View](assets/chart1.png)  
+(assets/demo1.png)  
+(assets/chart1.png)  
 
-*(Add more screenshots in the assets folder and link them here)*
 
 
 
