@@ -1,34 +1,49 @@
-// Demo API key for testing
-const API_KEY = "demo"; // Replace "demo" with your own Alpha Vantage API key for unlimited requests
+const API_KEY = "demo"; // replace with your personal key if needed
+
+let stockChart; // global variable for chart instance
 
 document.getElementById("get-stock").addEventListener("click", () => {
     const symbol = document.getElementById("stock-symbol").value.toUpperCase();
+    if(!symbol) return alert("Enter a stock symbol!");
 
-    if(!symbol) {
-        alert("Please enter a stock symbol!");
-        return;
-    }
-
-    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
+    const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${API_KEY}`;
 
     fetch(url)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
-            const quote = data["Global Quote"];
-            if (quote && quote["05. price"]) {
-                document.getElementById("stock-name").textContent = quote["01. symbol"];
-                document.getElementById("price").textContent = `$${parseFloat(quote["05. price"]).toFixed(2)}`;
-                document.getElementById("change").textContent = quote["10. change percent"];
-            } else {
-                document.getElementById("stock-name").textContent = "Invalid Symbol or API limit reached";
-                document.getElementById("price").textContent = "";
-                document.getElementById("change").textContent = "";
-            }
+            const timeSeries = data["Time Series (Daily)"];
+            if(!timeSeries) return alert("Invalid symbol or API limit reached");
+
+            // Get last 5 days
+            const dates = Object.keys(timeSeries).slice(0, 5).reverse();
+            const prices = dates.map(date => parseFloat(timeSeries[date]["4. close"]));
+
+            // Update stock info
+            document.getElementById("stock-name").textContent = symbol;
+            document.getElementById("price").textContent = `$${prices[prices.length - 1].toFixed(2)}`;
+            document.getElementById("change").textContent = `Change: ${(prices[prices.length - 1] - prices[prices.length - 2]).toFixed(2)}`;
+
+            // Plot chart
+            const ctx = document.getElementById("stockChart").getContext("2d");
+            if(stockChart) stockChart.destroy(); // destroy old chart
+            stockChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: symbol + ' Closing Prices',
+                        data: prices,
+                        borderColor: 'blue',
+                        fill: false,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: { beginAtZero: false }
+                    }
+                }
+            });
         })
-        .catch(err => {
-            console.error(err);
-            document.getElementById("stock-name").textContent = "Error fetching data";
-            document.getElementById("price").textContent = "";
-            document.getElementById("change").textContent = "";
-        });
+        .catch(err => console.error(err));
 });
