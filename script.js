@@ -1,25 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Real-Time Stock Ticker</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <h1>Real-Time Stock Ticker</h1>
+// Demo API key for testing
+const API_KEY = "demo"; // Replace "demo" with your own Alpha Vantage API key for unlimited requests
 
-    <input type="text" id="stock-symbol" placeholder="Enter stock symbol e.g., AAPL">
-    <button id="get-stock">Get Stock Price</button>
+document.getElementById("get-stock").addEventListener("click", () => {
+    const symbol = document.getElementById("stock-symbol").value.toUpperCase();
 
-    <div class="result">
-      <h2 id="stock-name"></h2>
-      <p id="price"></p>
-      <p id="change"></p>
-    </div>
-  </div>
+    if(!symbol) {
+        alert("Please enter a stock symbol!");
+        return;
+    }
 
-  <script src="script.js"></script>
-</body>
-</html>
+    const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${API_KEY}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            const quote = data["Global Quote"];
+            if (quote && quote["05. price"]) {
+                document.getElementById("stock-name").textContent = quote["01. symbol"];
+                document.getElementById("price").textContent = `$${parseFloat(quote["05. price"]).toFixed(2)}`;
+                document.getElementById("change").textContent = quote["10. change percent"];
+            } else {
+                document.getElementById("stock-name").textContent = "Invalid Symbol or API limit reached";
+                document.getElementById("price").textContent = "";
+                document.getElementById("change").textContent = "";
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById("stock-name").textContent = "Error fetching data";
+            document.getElementById("price").textContent = "";
+            document.getElementById("change").textContent = "";
+        });
+});
